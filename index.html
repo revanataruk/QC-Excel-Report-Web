@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Excel Mobile</title>
+    <!-- SheetJS (xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- FileSaver.js untuk menyimpan file -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background-color: #f3f4f6;
+            color: #1f2937;
+            line-height: 1.5;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        
+        .card-header {
+            background-color: #2563eb;
+            color: white;
+            padding: 16px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        
+        .tab.active {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .subtabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .subtab {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .subtab.active {
+            background-color: #e5e7eb;
+            font-weight: 500;
+        }
+        
+        .card-body {
+            padding: 16px;
+        }
+        
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 8px;
+            text-align: center;
+        }
+        
+        th {
+            background-color: #f9fafb;
+            font-weight: 500;
+        }
+        
+        .toggle-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 2px;
+        }
+        
+        .toggle-off {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+        
+        .toggle-on {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        input[type="number"] {
+            width: 45px;
+            height: 32px;
+            text-align: center;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 4px;
+        }
+        
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-submit:hover {
+            background-color: #059669;
+        }
+        
+        .note {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: center;
+            margin-top: 8px;
+        }
+        
+        .var-label {
+            font-weight: 600;
+        }
+        
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        
+        .loading-content {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 24px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                Form Excel Mobile
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" id="tab-atoh">Variables A-H</div>
+                <div class="tab" id="tab-itor">Variables I-R</div>
+            </div>
+            
+            <div id="subtabs-container" style="display: none;">
+                <div class="subtabs">
+                    <div class="subtab active" id="subtab-all">Semua Variables</div>
+                    <div class="subtab" id="subtab-ruanga">Ruang A</div>
+                    <div class="subtab" id="subtab-ruangb">Ruang B</div>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Tab A-H Content -->
+                <div id="content-atoh">
+                    <h2 class="section-title">Variables A-H (Toggle 0/1)</h2>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Variable</th>
+                                    <th>Jam ke-1</th>
+                                    <th>Jam ke-2</th>
+                                    <th>Jam ke-3</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-atoh">
+                                <!-- JavaScript akan mengisi ini -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Tab I-R Content -->
+                <div id="content-itor" style="display: none;">
+                    <h2 class="section-title" id="itor-title">Variables I-R (Numeric Values)</h2>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Variable</th>
+                                    <th>Jam ke-1</th>
+                                    <th>Jam ke-2</th>
+                                    <th>Jam ke-3</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-itor">
+                                <!-- JavaScript akan mengisi ini -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body" style="border-top: 1px solid #e5e7eb;">
+                <button id="btn-submit" class="btn-submit">Selesai & Download Excel</button>
+                <p class="note">Data akan disimpan dalam format Excel (.xlsx) sesuai template</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="loading" class="loading" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div>Memproses...</div>
+        </div>
+    </div>
+
+    <script>
+        // Data form
+const formData = {
+    variablesAtoH: {
+        A: { jam1: null, jam2: null, jam3: null },
+        B: { jam1: null, jam2: null, jam3: null },
+        C: { jam1: null, jam2: null, jam3: null },
+        D: { jam1: null, jam2: null, jam3: null },
+        E: { jam1: null, jam2: null, jam3: null },
+        F: { jam1: null, jam2: null, jam3: null },
+        G: { jam1: null, jam2: null, jam3: null },
+        H: { jam1: null, jam2: null, jam3: null }
+    },
+    variablesItoR: {
+        I: { jam1: '', jam2: '', jam3: '' },
+        J: { jam1: '', jam2: '', jam3: '' },
+        K: { jam1: '', jam2: '', jam3: '' },
+        L: { jam1: '', jam2: '', jam3: '' },
+        M: { jam1: '', jam2: '', jam3: '' },
+        N: { jam1: '', jam2: '', jam3: '' },
+        O: { jam1: '', jam2: '', jam3: '' },
+        P: { jam1: '', jam2: '', jam3: '' },
+        Q: { jam1: '', jam2: '', jam3: '' },
+        R: { jam1: '', jam2: '', jam3: '' }
+    }
+};
+            
+        // Variabel untuk tracking tab aktif
+        let activeTab = 'atoh';
+        let activeSubtab = 'all';
+        
+        // Path ke file template Excel
+        const templatePath = 'test-form-template.xlsx';
+        
+        // DOM Elements
+        const tabAtoh = document.getElementById('tab-atoh');
+        const tabItor = document.getElementById('tab-itor');
+        const subtabsContainer = document.getElementById('subtabs-container');
+        const subtabAll = document.getElementById('subtab-all');
+        const subtabRuangA = document.getElementById('subtab-ruanga');
+        const subtabRuangB = document.getElementById('subtab-ruangb');
+        const contentAtoh = document.getElementById('content-atoh');
+        const contentItor = document.getElementById('content-itor');
+        const tableAtoh = document.getElementById('table-atoh');
+        const tableItor = document.getElementById('table-itor');
+        const itorTitle = document.getElementById('itor-title');
+        const btnSubmit = document.getElementById('btn-submit');
+        const loading = document.getElementById('loading');
+        
+        // Render tabel A-H
+function renderTableAtoH() {
+    tableAtoh.innerHTML = '';
+    
+    Object.keys(formData.variablesAtoH).forEach(variable => {
+        const row = document.createElement('tr');
+        
+        // Kolom variable
+        const tdVar = document.createElement('td');
+        tdVar.innerHTML = `<span class="var-label">${variable}</span>`;
+        row.appendChild(tdVar);
+        
+        // Kolom jam 1-3
+        ['jam1', 'jam2', 'jam3'].forEach(jam => {
+            const td = document.createElement('td');
+            
+            // Buat container untuk 3 tombol (1, 2, 3)
+            td.innerHTML = `
+                <div style="display: flex; justify-content: space-between">
+                    <button class="toggle-btn ${formData.variablesAtoH[variable][jam] === 1 ? 'toggle-on' : 'toggle-off'}" 
+                            data-variable="${variable}" 
+                            data-jam="${jam}"
+                            data-value="1">1</button>
+                    <button class="toggle-btn ${formData.variablesAtoH[variable][jam] === 2 ? 'toggle-on' : 'toggle-off'}" 
+                            data-variable="${variable}" 
+                            data-jam="${jam}"
+                            data-value="2">2</button>
+                    <button class="toggle-btn ${formData.variablesAtoH[variable][jam] === 3 ? 'toggle-on' : 'toggle-off'}" 
+                            data-variable="${variable}" 
+                            data-jam="${jam}"
+                            data-value="3">3</button>
+                </div>`;
+            row.appendChild(td);
+        });
+        
+        tableAtoh.appendChild(row);
+    });
+                
+            // Add event listeners to toggle buttons
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const variable = this.getAttribute('data-variable');
+            const jam = this.getAttribute('data-jam');
+            const value = parseInt(this.getAttribute('data-value'), 10);
+            
+            // Reset semua tombol di baris yang sama
+            document.querySelectorAll(`.toggle-btn[data-variable="${variable}"][data-jam="${jam}"]`).forEach(b => {
+                b.className = 'toggle-btn toggle-off';
+            });
+            
+            // Jika tombol yang sama ditekan dua kali, batalkan pilihan
+            if (formData.variablesAtoH[variable][jam] === value) {
+                formData.variablesAtoH[variable][jam] = null;
+            } else {
+                // Set nilai baru dan tampilkan tombol aktif
+                formData.variablesAtoH[variable][jam] = value;
+                this.className = 'toggle-btn toggle-on';
+            }
+        });
+    });
+}
+        
+        // Render tabel I-R
+        function renderTableItoR() {
+            tableItor.innerHTML = '';
+            
+            let variables = Object.keys(formData.variablesItoR);
+            
+            // Filter berdasarkan subtab
+            if (activeSubtab === 'ruanga') {
+                variables = ['I', 'J', 'K', 'L', 'M'];
+                itorTitle.textContent = 'Variables I-R (Numeric Values) - Ruang A';
+            } else if (activeSubtab === 'ruangb') {
+                variables = ['N', 'O', 'P', 'Q', 'R'];
+                itorTitle.textContent = 'Variables I-R (Numeric Values) - Ruang B';
+            } else {
+                itorTitle.textContent = 'Variables I-R (Numeric Values)';
+            }
+            
+            variables.forEach(variable => {
+                const row = document.createElement('tr');
+                
+                // Kolom variable
+                const tdVar = document.createElement('td');
+                tdVar.innerHTML = `<span class="var-label">${variable}</span>`;
+                row.appendChild(tdVar);
+                
+                // Kolom jam 1-3
+                ['jam1', 'jam2', 'jam3'].forEach(jam => {
+                    const td = document.createElement('td');
+                    
+                    td.innerHTML = `<input type="number" 
+                                   data-variable="${variable}" 
+                                   data-jam="${jam}" 
+                                   value="${formData.variablesItoR[variable][jam]}">`;
+                    row.appendChild(td);
+                });
+                
+                tableItor.appendChild(row);
+            });
+            
+            // Add event listeners to number inputs
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    const variable = this.getAttribute('data-variable');
+                    const jam = this.getAttribute('data-jam');
+                    
+                    formData.variablesItoR[variable][jam] = this.value;
+                });
+            });
+        }
+        
+        // Tab switching
+        tabAtoh.addEventListener('click', function() {
+            activeTab = 'atoh';
+            tabAtoh.classList.add('active');
+            tabItor.classList.remove('active');
+            contentAtoh.style.display = 'block';
+            contentItor.style.display = 'none';
+            subtabsContainer.style.display = 'none';
+        });
+        
+        tabItor.addEventListener('click', function() {
+            activeTab = 'itor';
+            tabAtoh.classList.remove('active');
+            tabItor.classList.add('active');
+            contentAtoh.style.display = 'none';
+            contentItor.style.display = 'block';
+            subtabsContainer.style.display = 'block';
+            renderTableItoR();
+        });
+        
+        // Subtab switching
+        subtabAll.addEventListener('click', function() {
+            activeSubtab = 'all';
+            subtabAll.classList.add('active');
+            subtabRuangA.classList.remove('active');
+            subtabRuangB.classList.remove('active');
+            renderTableItoR();
+        });
+        
+        subtabRuangA.addEventListener('click', function() {
+            activeSubtab = 'ruanga';
+            subtabAll.classList.remove('active');
+            subtabRuangA.classList.add('active');
+            subtabRuangB.classList.remove('active');
+            renderTableItoR();
+        });
+        
+        subtabRuangB.addEventListener('click', function() {
+            activeSubtab = 'ruangb';
+            subtabAll.classList.remove('active');
+            subtabRuangA.classList.remove('active');
+            subtabRuangB.classList.add('active');
+            renderTableItoR();
+        });
+        
+        // Load template Excel and generate output Excel
+async function processExcel(fileName) {
+    try {
+        loading.style.display = 'flex';
+        
+        // Fetch template file
+        const response = await fetch(templatePath);
+        const templateData = await response.arrayBuffer();
+        
+        // Load template with SheetJS
+        const workbook = XLSX.read(templateData, { type: 'array' });
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        
+        // Map cell locations based on template for variables A-H
+        // Karena sekarang kita menggunakan pilihan 1, 2, 3 untuk setiap variabel
+        // Kita perlu membuat pemetaan yang lebih kompleks
+        
+        // Reset semua sel (Pastikan tidak ada nilai yang tersisa dari sebelumnya)
+        // Bagian A-H
+        for (let row = 6; row <= 13; row++) {
+            // D, E, F untuk jam ke-1
+            worksheet[`D${row}`] = { t: 'n', v: 0 };
+            worksheet[`E${row}`] = { t: 'n', v: 0 };
+            worksheet[`F${row}`] = { t: 'n', v: 0 };
+            
+            // G, H, I untuk jam ke-2
+            worksheet[`G${row}`] = { t: 'n', v: 0 };
+            worksheet[`H${row}`] = { t: 'n', v: 0 };
+            worksheet[`I${row}`] = { t: 'n', v: 0 };
+            
+            // J, K, L untuk jam ke-3
+            worksheet[`J${row}`] = { t: 'n', v: 0 };
+            worksheet[`K${row}`] = { t: 'n', v: 0 };
+            worksheet[`L${row}`] = { t: 'n', v: 0 };
+        }
+        
+        // Pemetaan kolom untuk A-H berdasarkan pilihan 1-3
+        const columnMappingAtoH = {
+            'jam1': {1: 'D', 2: 'E', 3: 'F'},
+            'jam2': {1: 'G', 2: 'H', 3: 'I'},
+            'jam3': {1: 'J', 2: 'K', 3: 'L'}
+        };
+        
+        // Pemetaan baris untuk A-H
+        const rowMappingAtoH = {
+            'A': 6,
+            'B': 7,
+            'C': 8,
+            'D': 9,
+            'E': 10,
+            'F': 11,
+            'G': 12,
+            'H': 13
+        };
+        
+        // Update worksheet dengan data form untuk variabel A-H
+        Object.keys(formData.variablesAtoH).forEach(variable => {
+            ['jam1', 'jam2', 'jam3'].forEach(jam => {
+                const selectedOption = formData.variablesAtoH[variable][jam];
+                
+                if (selectedOption) {
+                    const column = columnMappingAtoH[jam][selectedOption];
+                    const row = rowMappingAtoH[variable];
+                    const cellRef = `${column}${row}`;
+                    
+                    // Set nilai 1 pada sel yang sesuai
+                    worksheet[cellRef] = { t: 'n', v: 1 };
+                }
+            });
+        });
+        
+        // Pemetaan sel untuk variabel I-R (tetap seperti sebelumnya)
+        const cellMappingItoR = {
+            // Variables I-M (Ruang A)
+            // Shift 1 (jam ke-1)
+            'I:jam1': 'D16',
+            'J:jam1': 'D17',
+            'K:jam1': 'D18',
+            'L:jam1': 'D19',
+            'M:jam1': 'D20',
+            
+            // Shift 2 (jam ke-2)
+            'I:jam2': 'E16',
+            'J:jam2': 'E17',
+            'K:jam2': 'E18',
+            'L:jam2': 'E19',
+            'M:jam2': 'E20',
+            
+            // Shift 3 (jam ke-3)
+            'I:jam3': 'F16',
+            'J:jam3': 'F17',
+            'K:jam3': 'F18',
+            'L:jam3': 'F19',
+            'M:jam3': 'F20',
+            
+            // Variables N-R (Ruang B)
+            // Shift 1 (jam ke-1)
+            'N:jam1': 'I16',
+            'O:jam1': 'I17',
+            'P:jam1': 'I18',
+            'Q:jam1': 'I19',
+            'R:jam1': 'I20',
+            
+            // Shift 2 (jam ke-2)
+            'N:jam2': 'J16',
+            'O:jam2': 'J17',
+            'P:jam2': 'J18',
+            'Q:jam2': 'J19',
+            'R:jam2': 'J20',
+            
+            // Shift 3 (jam ke-3)
+            'N:jam3': 'K16',
+            'O:jam3': 'K17',
+            'P:jam3': 'K18',
+            'Q:jam3': 'K19',
+            'R:jam3': 'K20',
+        };
+        
+        // Update variables I-R (numeric values)
+        Object.keys(formData.variablesItoR).forEach(variable => {
+            ['jam1', 'jam2', 'jam3'].forEach(jam => {
+                const value = formData.variablesItoR[variable][jam];
+                const cellRef = cellMappingItoR[`${variable}:${jam}`];
+                
+                if (cellRef) {
+                    // Set numeric value in Excel, allowing negative values
+                    // Jika nilai kosong atau tidak valid, set ke 0
+                    const numValue = value === '' ? 0 : parseInt(value, 10);
+                    worksheet[cellRef] = { t: 'n', v: isNaN(numValue) ? 0 : numValue };
+                    
+                    // Log untuk debugging
+                    console.log(`Setting ${variable}:${jam} at ${cellRef} to ${numValue}`);
+                }
+            });
+        });
+        
+        // Generate Excel file from the original template (with styles preserved)
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array', cellStyles: true });
+
+        
+        // Save file
+        const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, `${fileName}.xlsx`);
+        
+        loading.style.display = 'none';
+    } catch (error) {
+        console.error('Error processing Excel:', error);
+        alert('Terjadi kesalahan saat memproses file Excel. Pastikan template ada di lokasi yang benar.');
+        loading.style.display = 'none';
+    }
+}
+        
+        // Submit and download handler
+        btnSubmit.addEventListener('click', function() {
+            const fileName = prompt('Masukkan nama file:', 'form-data');
+            if (fileName) {
+                processExcel(fileName);
+            }
+        });
+        
+        // Init
+        renderTableAtoH();
+        renderTableItoR();
+    </script>
+</body>
+</html>
