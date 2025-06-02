@@ -1,4 +1,4 @@
-# 📱 Form Excel Mobile — Simplified Data Entry Solution
+# 📱 QC Excel Report Web — Simplified Data Entry Solution
 
 **Mobile-Optimized Excel Form Generator for Enterprise Use**
 
@@ -45,21 +45,11 @@ Form Excel Mobile is a specialized web application designed to streamline Excel 
 ## 📁 Project Structure
 
 ```
-form-excel-mobile/
+QC-Excel-Report-Web/
 ├── index.html          # Main form interface
-├── styles/
-│   ├── mobile.css      # Mobile-specific styling
-│   └── form.css        # Form component styling
-├── scripts/
-│   ├── form-handler.js # Form processing and validation
-│   ├── excel-gen.js    # Excel generation and template logic
-│   └── mobile-ui.js    # Mobile-specific UI interactions
-├── templates/
-│   ├── demo-template.xlsx    # Current demo template (customizable)
-│   ├── template-example.xlsx # Example company format
-│   └── custom-templates/     # Directory for client-specific templates
-├── assets/
-│   └── icons/          # Mobile UI icons and branding
+├── FileSaver.min.js
+├── test-form-template.xlsx
+├── xlsx.full.min.js
 └── README.md
 ```
 
