@@ -1,0 +1,1 @@
+Masi ditulisss sabar yaa
